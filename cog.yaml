@@ -5,7 +5,6 @@ build:
   cuda: "11.8"
   python_version: "3.9"
   python_packages:
-    - "diffusers==0.24.0"
     - "torch==2.0.1"
     - "opencv-contrib-python-headless==4.8.1.78"
     - "controlnet-aux==0.0.7"
@@ -17,5 +16,6 @@ build:
 
   run:
     - pip install git+https://github.com/sberbank-ai/Real-ESRGAN.git
+    - pip install git+https://github.com/instantX-research/diffusers_flux.git
 
 predict: "predict.py:Predictor"
