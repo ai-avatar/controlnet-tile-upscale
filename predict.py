@@ -15,6 +15,8 @@ from diffusers import (
     EulerAncestralDiscreteScheduler,
     EulerDiscreteScheduler,
 )
+from diffusers.pipelines.flux.pipeline_flux_controlnet import FluxControlNetPipeline
+from diffusers.models.controlnet_flux import FluxControlNetModel
 from PIL import Image, ImageEnhance
 import cv2
 import numpy as np
@@ -38,14 +40,14 @@ class Predictor(BasePredictor):
         print("Loading pipeline...")
         st = time.time()
 
-        controlnet = ControlNetModel.from_pretrained(
+        controlnet = FluxControlNetModel.from_pretrained(
             CONTROLNET_CACHE,
-            torch_dtype=torch.float16
+            torch_dtype=torch.bfloat16
         )
 
-        self.pipe = StableDiffusionControlNetImg2ImgPipeline.from_pretrained(
+        self.pipe = FluxControlNetPipeline.from_pretrained(
             SD15_WEIGHTS,
-            torch_dtype=torch.float16,
+            torch_dtype=torch.bfloat16,
             controlnet=controlnet
         ).to("cuda")
 
@@ -183,7 +185,7 @@ class Predictor(BasePredictor):
             seed = int.from_bytes(os.urandom(2), "big")
         print(f"Using seed: {seed}")
 
-        self.pipe.scheduler = SCHEDULERS[scheduler].from_config(self.pipe.scheduler.config)
+        # self.pipe.scheduler = SCHEDULERS[scheduler].from_config(self.pipe.scheduler.config)
         generator = torch.Generator("cuda").manual_seed(seed)
         loaded_image = self.load_image(image)
         control_image = self.resize_for_condition_image(loaded_image, resolution)
@@ -193,23 +195,24 @@ class Predictor(BasePredictor):
             "prompt": prompt,
             "image": final_image,
             "control_image": final_image,
-            "strength": creativity,
+            # "strength": creativity,
             "controlnet_conditioning_scale": resemblance,
             "negative_prompt": negative_prompt,
             "guidance_scale": guidance_scale,
             "generator": generator,
             "num_inference_steps": steps,
-            "guess_mode": guess_mode,
+            "control_mode": 1,
+            # "guess_mode": guess_mode,
         }
         
         w,h = control_image.size
         
-        if (w*h > 2560*2560):
-            self.pipe.enable_vae_tiling()
-        else:
-            self.pipe.disable_vae_tiling()
+        # if (w*h > 2560*2560):
+        #     self.pipe.enable_vae_tiling()
+        # else:
+        #     self.pipe.disable_vae_tiling()
         
-        self.pipe.enable_xformers_memory_efficient_attention()
+        # self.pipe.enable_xformers_memory_efficient_attention()
         outputs = self.pipe(**args)
         output_paths = []
         for i, sample in enumerate(outputs.images):
