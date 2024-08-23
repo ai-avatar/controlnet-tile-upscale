@@ -1,4 +1,4 @@
-from diffusers import DiffusionPipeline, AutoencoderKL
+from diffusers import FluxPipeline
 from diffusers.models.controlnet_flux import FluxControlNetModel
 import torch
 from RealESRGAN import RealESRGAN
